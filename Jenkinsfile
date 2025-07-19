@@ -33,5 +33,31 @@ pipeline {
             """
           }
         }
+         stage('Approval to Continue') {
+                    steps {
+                        script {
+                            def proceed = input message: 'SonarCloud analysis complete. Do you want to continue?', ok: 'Yes'
+                            echo "User chose to continue: ${proceed}"
+                        }
+                    }
+         }
+         stage('Docker Build & Push') {
+             environment {
+                 DOCKERHUB_CREDENTIALS = credentials('docker-credentials') // ID of your Docker Hub credentials
+             }
+             steps {
+                 script {
+                     def imageName = "nour490/vendor-service-api:latest"
+
+                     sh "docker build -t $imageName ."
+
+                     sh """
+                         echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
+                         docker push $imageName
+                     """
+                 }
+             }
+         }
+
     }
 }
