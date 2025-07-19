@@ -41,23 +41,27 @@ pipeline {
                         }
                     }
          }
-         stage('Docker Build & Push') {
-             environment {
-                 DOCKERHUB_CREDENTIALS = credentials('docker-credentials') // ID of your Docker Hub credentials
-             }
-             steps {
-                 script {
-                     def imageName = "nour490/vendor-service-api:latest"
+        stage('Docker Build & Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-credentials',
+                    usernameVariable: 'DOCKER_USERNAME',
+                    passwordVariable: 'DOCKER_PASSWORD'
+                )]) {
+                    script {
+                        def imageName = "nour490/vendor-service-api:latest"
 
-                     sh "docker build -t $imageName ."
+                        sh "docker build -t $imageName ."
 
-                     sh """
-                         echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
-                         docker push $imageName
-                     """
-                 }
-             }
-         }
+                        sh '''
+                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                            docker push ''' + imageName + '''
+                        '''
+                    }
+                }
+            }
+        }
+
 
     }
 }
