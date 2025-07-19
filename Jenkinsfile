@@ -6,6 +6,10 @@ pipeline {
         jdk "jdk"        // 👈 Match this to your installed JDK
     }
 
+    environment {
+    SONAR_TOKEN = credentials('sonarcloud-token')
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -18,11 +22,16 @@ pipeline {
                 sh 'mvn clean install -DskipTests'
             }
         }
-
-        stage('Post-Build') {
-            steps {
-                echo '✅ Maven build completed successfully.'
-            }
+        stage('SonarCloud Analysis') {
+          steps {
+            sh """
+              mvn sonar:sonar \
+                -Dsonar.projectKey=Nour490-code_vendor-service-API \
+                -Dsonar.organization=nour490-code \
+                -Dsonar.host.url=https://sonarcloud.io \
+                -Dsonar.login=$SONAR_TOKEN
+            """
+          }
         }
     }
 }
