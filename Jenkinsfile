@@ -51,7 +51,8 @@ pipeline {
 
                         sh '''
                             echo "$DOCKER_TOKEN" | docker login -u "nourghazy" --password-stdin
-                            docker push ''' + imageName + '''
+                            docker push ''' + imageName + ''' | \
+                            grep -E 'Pushing|Layer already exists|Mounted from' --line-buffered
                         '''
                     }
             }
