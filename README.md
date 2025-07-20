@@ -139,6 +139,51 @@ These are required for MongoDB connection (see `src/main/resources/application.p
 
 ---
 
+## Jenkins CI/CD Pipeline
+
+![CI/CD Pipeline Diagram](CI%20CD_vendor-serviceAPI_pipeline%20.png)
+
+*Figure: CI/CD pipeline for vendor-service API as implemented in Jenkins.*
+
+This project includes a `Jenkinsfile` for automating the build, test, analysis, Dockerization, and deployment process. The pipeline is designed for use with Jenkins and covers the following stages:
+
+### Pipeline Stages
+
+1. **Checkout**
+   - Clones the repository from GitHub.
+
+2. **Build**
+   - Runs `mvn clean install -DskipTests` to build the project without running tests.
+
+3. **SonarCloud Analysis**
+   - Runs static code analysis using SonarCloud to ensure code quality and maintainability.
+   - Uses a SonarCloud token for authentication.
+
+4. **Approval to Continue**
+   - Pauses the pipeline and waits for manual approval after SonarCloud analysis before proceeding to deployment steps.
+
+5. **Docker Build & Push**
+   - Builds a Docker image for the service and tags it as `nourghazy/vendor-service-api:latest`.
+   - Logs in to Docker Hub using a secure token and pushes the image to the Docker registry.
+
+6. **Deploy To AWS EC2**
+   - Uses SSH to connect to an AWS EC2 instance.
+   - Pulls the latest Docker image from Docker Hub.
+   - Removes any existing container and runs the new container with the required MongoDB environment variables.
+
+### Environment Variables Used in Jenkins
+- `SONAR_TOKEN`: SonarCloud authentication token
+- `DOCKER_TOKEN`: Docker Hub authentication token
+- `EC2_IP`: AWS EC2 instance IP address
+- `MONGO_ADMIN`, `MONGO_PASSWORD`, `MONGO_CLUSTER`, `MONGO_DATABASE`: MongoDB connection details
+
+### Notes
+- The pipeline is designed for continuous integration and continuous deployment (CI/CD).
+- It ensures code quality, automates Docker image creation, and deploys the latest version to AWS EC2.
+- Manual approval is required after code analysis for an extra layer of control before deployment.
+
+---
+
 ## Running with Docker
 
 1. **Build the JAR:**
