@@ -8,6 +8,7 @@ pipeline {
 
     environment {
     SONAR_TOKEN = credentials('sonarcloud-token')
+    DOCKER_TOKEN = credentials('docker-token')
     }
 
     stages {
@@ -43,25 +44,17 @@ pipeline {
          }
         stage('Docker Build & Push') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-credentials',
-                    usernameVariable: 'DOCKER_USERNAME',
-                    passwordVariable: 'DOCKER_PASSWORD'
-                )]) {
                     script {
-                        def imageName = "nour490/vendor-service-api:latest"
+                        def imageName = "nourghazy/vendor-service-api:latest"
 
                         sh "docker build -t $imageName ."
 
                         sh '''
-                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                            echo "$DOCKER_TOKEN" | docker login -u "nourghazy" --password-stdin
                             docker push ''' + imageName + '''
                         '''
                     }
-                }
             }
         }
-
-
     }
 }
