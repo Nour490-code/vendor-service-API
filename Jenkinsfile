@@ -9,6 +9,11 @@ pipeline {
     environment {
     SONAR_TOKEN = credentials('sonarcloud-token')
     DOCKER_TOKEN = credentials('docker-token')
+    EC2_IP = credentials('aws-ec2-ip')
+    MONGO_ADMIN = credentials('mongo-admin')
+    MONGO_PASSWORD = credentials('mongo-pass')
+    MONGO_CLUSTER = credentials('mongo-cluster')
+    MONGO_DATABASE = credentials('mongo-db')
     }
 
     stages {
@@ -57,5 +62,22 @@ pipeline {
                     }
             }
         }
+        stage('Deploy To AWS EC2') {
+            steps {
+                script {
+                    sshagent(['ec2-key']) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ec2-user@$EC2_IP '
+                                docker pull nourghazy/vendor-service-api:latest &&
+                                docker rm -f vendor-container || true &&
+                                docker run -d -p 8081:8081 --name vendor-container -e MONGO_ADMIN=$MONGO_ADMIN -e MONGO_PASSWORD=$MONGO_PASSWORD -e MONGO_CLUSTER=$MONGO_CLUSTER -e MONGO_DATABASE=$MONGO_DATABASE nourghazy/vendor-service-api:latest
+                            '
+                        """
+                    }
+                }
+            }
+        }
+
+
     }
 }
